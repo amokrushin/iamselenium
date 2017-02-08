@@ -1,0 +1,48 @@
+version: '2'
+services:
+  hub:
+    image: "selenium/hub:3.0.1-germanium"
+    restart: always
+    ports:
+      - 4444:4444
+      - 500:500/udp
+      - 4500:4500/udp
+    expose:
+      - 4444
+    tty: true
+    networks:
+      - network
+
+  chrome:
+    image: "selenium/node-chrome:3.0.1-germanium"
+    restart: always
+    tty: true
+    networks:
+      - network
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=hub
+      - HUB_PORT_4444_TCP_PORT=4444
+
+  firefox:
+    image: "selenium/node-firefox:3.0.1-germanium"
+    restart: always
+    tty: true
+    networks:
+      - network
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=hub
+      - HUB_PORT_4444_TCP_PORT=4444
+
+  vpn:
+    image: "hwdsl2/ipsec-vpn-server"
+    env_file: ./vpn.env
+    restart: always
+    network_mode: service:hub
+    volumes:
+      - /lib/modules:/lib/modules:ro
+    privileged: true
+    tty: true
+    depends_on:
+      - hub
+networks:
+  network:
